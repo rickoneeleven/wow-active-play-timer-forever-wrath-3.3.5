@@ -134,6 +134,7 @@ local function MakeMovable(frame, positionKey)
     frame:SetClampedToScreen(true)
     frame:RegisterForDrag("LeftButton")
     frame:SetScript("OnDragStart", function(self)
+        self.wasDragged = true
         self:StartMoving()
     end)
     frame:SetScript("OnDragStop", function(self)
@@ -393,15 +394,19 @@ local function CreateCountdownFrame()
     countdownText:SetPoint("CENTER", 0, 0)
     countdownText:SetText("10:00")
 
-    countdownFrame:SetScript("OnMouseUp", function(_, button)
+    countdownFrame:SetScript("OnMouseUp", function(self, button)
+        local wasDragged = self.wasDragged
+        self.wasDragged = nil
         if button == "RightButton" then
             ToggleSettings()
+        elseif button == "LeftButton" and not wasDragged then
+            ShowReminder()
         end
     end)
     AddTooltip(
         countdownFrame,
         "111 Timer",
-        "White: counting. Grey: idle. Orange: reminder due. Drag to move; right-click for settings."
+        "White: counting. Grey: idle. Orange: reminder due. Click to choose a duration; drag to move; right-click for settings."
     )
 end
 

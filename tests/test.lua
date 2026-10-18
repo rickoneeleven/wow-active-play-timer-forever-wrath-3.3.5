@@ -125,6 +125,28 @@ AssertEqual(OneElevenTimerDB.defaultIndex, 2, "default duration index")
 AssertEqual(countdownValue.text, "10:00", "fresh login countdown")
 AssertEqual(reminder.shown, false, "fresh login reminder visibility")
 
+countdown.scripts.OnMouseUp(countdown, "LeftButton")
+AssertEqual(reminder.shown, true, "click opens duration picker before expiry")
+AssertEqual(countdownValue.text, "10:00", "opening picker preserves current timer")
+reminder.durationButtons[3].scripts.OnClick()
+AssertEqual(countdownValue.text, "30:00", "choose thirty minutes without waiting for expiry")
+AssertEqual(reminder.shown, false, "choosing duration closes picker")
+countdown.scripts.OnDragStart(countdown)
+countdown.scripts.OnDragStop(countdown)
+countdown.scripts.OnMouseUp(countdown, "LeftButton")
+AssertEqual(reminder.shown, false, "dragging countdown does not open duration picker")
+countdown.scripts.OnMouseUp(countdown, "LeftButton")
+AssertEqual(reminder.shown, true, "click after dragging still opens picker")
+playerInCombat = true
+reminder:Hide()
+countdown.scripts.OnMouseUp(countdown, "LeftButton")
+AssertEqual(reminder.shown, false, "manual picker respects combat suppression")
+playerInCombat = false
+countdown.scripts.OnMouseUp(countdown, "RightButton")
+AssertEqual(settings.shown, true, "right click retains settings access")
+settings:Hide()
+eventFrame.scripts.OnEvent(eventFrame, "PLAYER_LOGIN")
+
 Advance(eventFrame, 20, 0)
 AssertEqual(countdownValue.text, "10:00", "idle time does not count")
 

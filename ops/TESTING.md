@@ -9,6 +9,7 @@ The Lua behavioural harness simulates the World of Warcraft API and exercises th
 ## Fast Path
 
 - `npx --yes --package=fengari-node-cli fengari tests/test.lua` - run the complete addon behavioural suite from the repository root
+- `lua -e 'unpack=table.unpack or unpack; dofile("tests/test.lua")'` - run locally when Lua is installed
 
 ## Area Overrides
 

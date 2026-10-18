@@ -18,7 +18,7 @@ Install this repository as a folder named `111timer` inside:
 World of Warcraft/Interface/AddOns/111timer
 ```
 
-Restart World of Warcraft or run `/reload`. Use `/111timer` or right-click the countdown to open settings.
+Restart World of Warcraft or run `/reload`. Left-click the countdown to choose a new duration immediately, without waiting for expiry. Drag it to move; right-click or use `/111timer` to open settings.
 
 ## Use
 
