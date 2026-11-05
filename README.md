@@ -62,6 +62,6 @@ MIT; see `LICENSE`.
 
 ## Forever installation
 
-On this Mac the live copy is `/Applications/World of Warcraft/_forever_/Interface/AddOns/111timer`. Deploy `111timer.lua` and `111timer.toc` from this repository there. Settings are separate in each client; no other client configuration needs copying.
+On this Mac the live copy is `/Applications/World of Warcraft/_forever_/Interface/AddOns/111timer`. Deploy `111timer.lua` and `111timer_Forever.toc` from this repository there, renaming the latter to `111timer.toc`. The ordinary `111timer.toc` stays on interface 30300 for the original Wrath client. Settings are separate in each client; no other client configuration needs copying.
 
 Compatibility was checked against the installed 1.60.1.70790 client metadata and Blizzard UI source on the Gethe `forever` branch. The modern simulation requires `BackdropTemplate` and rejects `GetUnitSpeed` use, whose results can be secret; Forever uses `IsPlayerMoving` instead. In-game rendering still needs acceptance in the actual client.
