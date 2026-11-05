@@ -1,3 +1,5 @@
+local modern = arg and arg[1] == "forever"
+BackdropTemplateMixin = modern and {} or nil
 local frames = {}
 local namedFrames = {}
 local playerSpeed = 0
@@ -12,10 +14,14 @@ local function NewObject(name)
         point = { "CENTER", nil, "CENTER", 0, 0 },
     }
 
+    function object:SetScale(value) self.scale = value end
     function object:SetWidth(value) self.width = value end
     function object:SetHeight(value) self.height = value end
     function object:SetFrameStrata(value) self.strata = value end
-    function object:SetBackdrop(value) self.backdrop = value end
+    function object:SetBackdrop(value)
+        if modern then assert(self.template == "BackdropTemplate", "modern backdrop needs template") end
+        self.backdrop = value
+    end
     function object:SetBackdropColor(...) self.backdropColour = { ... } end
     function object:SetMovable(value) self.movable = value end
     function object:EnableMouse(value) self.mouseEnabled = value end
@@ -74,7 +80,13 @@ function CreateFrame(kind, name, parent, template)
     return frame
 end
 
-function GetUnitSpeed() return playerSpeed end
+function GetUnitSpeed()
+    assert(not modern, "Forever must avoid potentially secret unit speed")
+    return playerSpeed
+end
+if modern then
+    function IsPlayerMoving() return playerSpeed > 0 end
+end
 function UnitAffectingCombat() return playerInCombat end
 
 GameTooltip = {
@@ -122,6 +134,7 @@ AssertEqual(OneElevenTimerDB.durations[1], 300, "first default duration")
 AssertEqual(OneElevenTimerDB.durations[2], 600, "second default duration")
 AssertEqual(OneElevenTimerDB.durations[3], 1800, "third default duration")
 AssertEqual(OneElevenTimerDB.defaultIndex, 2, "default duration index")
+AssertEqual(countdown.scale, 0.70, "countdown is thirty percent smaller")
 AssertEqual(countdownValue.text, "10:00", "fresh login countdown")
 AssertEqual(reminder.shown, false, "fresh login reminder visibility")
 
@@ -138,7 +151,8 @@ AssertEqual(reminder.shown, false, "dragging countdown does not open duration pi
 countdown.scripts.OnMouseUp(countdown, "LeftButton")
 AssertEqual(reminder.shown, true, "click after dragging still opens picker")
 playerInCombat = true
-reminder:Hide()
+eventFrame.scripts.OnEvent(eventFrame, "PLAYER_REGEN_DISABLED")
+AssertEqual(reminder.shown, false, "combat hides manually opened picker")
 countdown.scripts.OnMouseUp(countdown, "LeftButton")
 AssertEqual(reminder.shown, false, "manual picker respects combat suppression")
 playerInCombat = false
@@ -153,11 +167,19 @@ AssertEqual(countdownValue.text, "10:00", "idle time does not count")
 Advance(eventFrame, 5, 7)
 AssertEqual(countdownValue.text, "9:55", "movement counts")
 
+eventFrame.scripts.OnUpdate(eventFrame, 20)
+AssertEqual(countdownValue.text, "9:55", "long stalls do not consume play time")
+eventFrame.scripts.OnEvent(eventFrame, "PLAYER_LEAVING_WORLD")
+Advance(eventFrame, 10, 7)
+AssertEqual(countdownValue.text, "9:55", "loading screens do not consume play time")
+eventFrame.scripts.OnEvent(eventFrame, "PLAYER_ENTERING_WORLD")
+Advance(eventFrame, 1, 7)
+AssertEqual(countdownValue.text, "9:54", "movement resumes after loading")
 Advance(eventFrame, 1, 0)
-AssertEqual(countdownValue.text, "9:55", "timer pauses as soon as movement stops")
+AssertEqual(countdownValue.text, "9:54", "timer pauses as soon as movement stops")
 eventFrame.scripts.OnEvent(eventFrame, "LOOT_OPENED")
 Advance(eventFrame, 5, 0)
-AssertEqual(countdownValue.text, "9:55", "non-movement activity does not consume timer")
+AssertEqual(countdownValue.text, "9:54", "non-movement activity does not consume timer")
 
 OneElevenTimerDB.durations[2] = 60
 eventFrame.scripts.OnEvent(eventFrame, "PLAYER_LOGIN")
@@ -219,4 +241,4 @@ AssertEqual(reminder.durationButtons[3].text, "2 hours", "whole-hour duration la
 eventFrame.scripts.OnEvent(eventFrame, "PLAYER_LOGIN")
 AssertEqual(countdownValue.text, "6:00", "login uses configured default")
 
-print("111timer behavioural tests passed")
+print("111timer behavioural tests passed (" .. (modern and "Forever" or "Wrath") .. ")")

@@ -2,6 +2,8 @@ OneElevenTimer = {}
 
 local ADDON_NAME = "111timer"
 local UPDATE_INTERVAL = 0.10
+local COUNTDOWN_SCALE = 0.70
+local BACKDROP_TEMPLATE = BackdropTemplateMixin and "BackdropTemplate" or nil
 local MIN_DURATION_MINUTES = 1
 local MAX_DURATION_MINUTES = 180
 
@@ -26,6 +28,7 @@ local VALID_POINTS = {
 
 local state = {
     started = false,
+    inWorld = false,
     remaining = 0,
     expired = false,
     active = false,
@@ -324,7 +327,7 @@ local function AddTooltip(frame, title, body)
 end
 
 local function CreateReminderFrame()
-    reminderFrame = CreateFrame("Frame", "OneElevenTimerReminderFrame", UIParent)
+    reminderFrame = CreateFrame("Frame", "OneElevenTimerReminderFrame", UIParent, BACKDROP_TEMPLATE)
     reminderFrame:SetWidth(360)
     reminderFrame:SetHeight(150)
     reminderFrame:SetFrameStrata("DIALOG")
@@ -374,7 +377,8 @@ local function CreateReminderFrame()
 end
 
 local function CreateCountdownFrame()
-    countdownFrame = CreateFrame("Frame", "OneElevenTimerCountdownFrame", UIParent)
+    countdownFrame = CreateFrame("Frame", "OneElevenTimerCountdownFrame", UIParent, BACKDROP_TEMPLATE)
+    countdownFrame:SetScale(COUNTDOWN_SCALE)
     countdownFrame:SetWidth(94)
     countdownFrame:SetHeight(34)
     countdownFrame:SetFrameStrata("MEDIUM")
@@ -411,7 +415,7 @@ local function CreateCountdownFrame()
 end
 
 local function CreateSettingsFrame()
-    settingsFrame = CreateFrame("Frame", "OneElevenTimerSettingsFrame", UIParent)
+    settingsFrame = CreateFrame("Frame", "OneElevenTimerSettingsFrame", UIParent, BACKDROP_TEMPLATE)
     settingsFrame:SetWidth(390)
     settingsFrame:SetHeight(310)
     settingsFrame:SetFrameStrata("DIALOG")
@@ -523,12 +527,21 @@ local function OnEvent(_, event, arg1)
         CreateUserInterface()
     elseif event == "PLAYER_LOGIN" then
         state.started = true
+        state.inWorld = true
         state.inCombat = UnitAffectingCombat("player") and true or false
         StartDefaultTimer()
         SetCountdownVisibility()
+    elseif event == "PLAYER_LEAVING_WORLD" then
+        state.inWorld = false
+        state.active = false
+        state.accumulator = 0
+        RefreshCountdown()
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        state.inWorld = true
+        state.accumulator = 0
     elseif event == "PLAYER_REGEN_DISABLED" then
         state.inCombat = true
-        if state.expired and reminderFrame:IsShown() then
+        if reminderFrame:IsShown() then
             reminderFrame:Hide()
         end
     elseif event == "PLAYER_REGEN_ENABLED" then
@@ -540,7 +553,14 @@ local function OnEvent(_, event, arg1)
 end
 
 local function OnUpdate(_, elapsed)
-    if not state.started or state.expired then
+    if not state.started or not state.inWorld or state.expired then
+        return
+    end
+
+    if elapsed > 1 then
+        state.accumulator = 0
+        state.active = false
+        RefreshCountdown()
         return
     end
 
@@ -552,7 +572,12 @@ local function OnUpdate(_, elapsed)
     local step = state.accumulator
     state.accumulator = 0
 
-    local moving = (GetUnitSpeed("player") or 0) > 0
+    local moving
+    if IsPlayerMoving then
+        moving = IsPlayerMoving()
+    else
+        moving = (GetUnitSpeed("player") or 0) > 0
+    end
     local inCombat = IsPlayerInCombat()
 
     state.active = moving or inCombat
@@ -570,6 +595,8 @@ end
 
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:RegisterEvent("PLAYER_LEAVING_WORLD")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 eventFrame:SetScript("OnEvent", OnEvent)

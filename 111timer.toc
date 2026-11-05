@@ -1,8 +1,8 @@
-## Interface: 30300
+## Interface: 30300, 16001
 ## Title: 111 Timer
-## Notes: Active-play task reminders for Wrath of the Lich King 3.3.5a.
+## Notes: Active-play task reminders for WoW Forever and Wrath 3.3.5a.
 ## Author: rickoneeleven
-## Version: 1.0.2
+## Version: 1.0.3
 ## SavedVariables: OneElevenTimerDB
 
 111timer.lua
