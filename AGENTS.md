@@ -1,4 +1,4 @@
-# AGENTS.md v15.30
+# AGENTS.md v15.32
 
 ## Session Bootstrap (New Conversations Only)
 
